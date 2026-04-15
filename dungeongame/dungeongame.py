@@ -277,13 +277,12 @@ class DungeonGame:
                 if self.adventurer.hp <= 0:
                     
                     if self.log_game:
-                        # go back to the player's last action and punish them
-                        # for entering the dungeon and dying
-                        self._reward_last_action(player, REWARDS["died"])
-
                         if Equipment.VORPAL_SWORD in self.adventurer.equipment:
-                            # punish the player for using the vorpal sword and dying
-                            self.game_log.append((game_state, action_space, {"reward": REWARDS["died"]}))
+                            # log vorpal targeting decision first so _reward_last_action patches it
+                            self.game_log.append((game_state, action_space, {"reward": 0}))
+
+                        # patch the most recent entry (vorpal if present, else pass/add)
+                        self._reward_last_action(player, REWARDS["died"])
                             
                         # reward every other player for the player that died
                         for opponent in self.players:
@@ -304,12 +303,11 @@ class DungeonGame:
         if not player_died:
 
             if self.log_game:
-                # go back to the player's last action and reward them for
-                # entering the dungeon and passing
-                self._reward_last_action(player, REWARDS["passed"])
                 if Equipment.VORPAL_SWORD in self.adventurer.equipment:
-                    # reward the player for using the vorpal sword and passing
-                    self.game_log.append((game_state, action_space, {"reward": REWARDS["passed"]}))
+                    # log vorpal targeting decision first so _reward_last_action patches it
+                    self.game_log.append((game_state, action_space, {"reward": 0}))
+                # patch the most recent entry (vorpal if present, else pass/add)
+                self._reward_last_action(player, REWARDS["passed"])
 
                 # # for each other player, punish them for the player that successfully passed the dungeon
                 for opponent in self.players:
@@ -607,9 +605,9 @@ class DungeonGame:
 
                     if current_player.won:
                         self._print(f"Player {current_player} won by points!")
-                        # give additional rewards to the player that won
-                        self._reward_last_action(current_player, REWARDS["won"])
                         if self.log_game:
+                            # give additional rewards to the player that won
+                            self._reward_last_action(current_player, REWARDS["won"])
                             # for each other player, update the reward of their last action
                             for opponent in self.players:
                                 if opponent != current_player and opponent.is_alive:
