@@ -1,3 +1,35 @@
+"""
+validate.py — Agent validation and learning-curve analysis for Dungeon of Mandom.
+
+Usage
+-----
+Test the latest trained agent against a random-agent baseline:
+    python validate.py
+
+Test with a custom number of games:
+    python validate.py --n-games 200
+
+Plot win rate across all training checkpoints (learning curve):
+    python validate.py --curve
+
+Learning curve with custom sampling and game count:
+    python validate.py --curve --sample-every 5 --n-games 100
+
+Modes
+-----
+Default (no flags):
+    Loads the highest-numbered model/agentN checkpoint, runs N_GAMES games with
+    1 greedy agent vs 3 random agents, and compares against a 4-random baseline.
+    Reports win rate with a Wilson 95% CI and a PASS/FAIL verdict relative to
+    the 25% theoretical random baseline.
+
+--curve:
+    Iterates over all saved checkpoints (sampled every --sample-every steps),
+    runs N_GAMES_CURVE games per checkpoint, prints a per-checkpoint table, and
+    saves a win-rate-vs-iteration plot with CI band to images/learning_curve.png.
+    Use this to verify that more training produces a better agent.
+"""
+
 import argparse
 import os
 from dungeongame import DungeonGame
@@ -6,11 +38,16 @@ from math import sqrt
 import glob
 import matplotlib.pyplot as plt
 
-N_GAMES = 500
-N_GAMES_CURVE = 200
+N_GAMES = 500        # games per condition in default mode
+N_GAMES_CURVE = 200  # games per checkpoint in --curve mode
 
 
 def wilson_ci(wins, n, z=1.96):
+    """Return the (lower, upper) bounds of a Wilson score confidence interval.
+
+    More accurate than a normal approximation near p=0 or p=1, which matters
+    when win rates are very high or very low.
+    """
     p = wins / n
     center = (p + z**2 / (2 * n)) / (1 + z**2 / n)
     margin = z * sqrt(p * (1 - p) / n + z**2 / (4 * n**2)) / (1 + z**2 / n)
@@ -18,6 +55,11 @@ def wilson_ci(wins, n, z=1.96):
 
 
 def player_won(player, all_players):
+    """Return True if the player won the game.
+
+    Checks player.won first (set when a player reaches 2 points), then falls
+    back to last-alive detection for games that end with all others eliminated.
+    """
     if player.won:
         return True
     alive = [p for p in all_players if p.is_alive]
@@ -68,6 +110,10 @@ def run_test(agent, n):
 
 
 def summarise(results):
+    """Aggregate a list of per-game result dicts.
+
+    Returns (wins, n, avg_points, avg_defeats).
+    """
     n = len(results)
     wins = sum(r["won"] for r in results)
     avg_points = sum(r["points"] for r in results) / n
@@ -76,7 +122,15 @@ def summarise(results):
 
 
 def run_learning_curve(n, sample_every):
-    """Test every sample_every-th checkpoint and return per-checkpoint stats."""
+    """Test a sampled subset of checkpoints and return per-checkpoint stats.
+
+    Checkpoints in model/agentN/ are sorted numerically and every sample_every-th
+    folder is tested. Each checkpoint is evaluated with n games of 1 greedy agent
+    vs 3 random agents.
+
+    Returns a list of dicts with keys: iteration, win_rate, ci_lo, ci_hi,
+    avg_points, avg_defeats.
+    """
     model_folders = sorted(
         glob.glob("model/agent*"),
         key=lambda x: int(x.split("agent")[1])
