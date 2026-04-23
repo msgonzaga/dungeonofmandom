@@ -61,7 +61,7 @@ REWARDS = {
 
 class DungeonGame:
     """ This class will store the game variables and run the game loop."""
-    def __init__(self, players, model_path=None, agent=None, auto_run: bool = False,
+    def __init__(self, players, model_path=None, agent=None, frozen_agent=None, auto_run: bool = False,
                  log_game: bool = False, verbose: bool = False):
         """
         Game constructor
@@ -89,17 +89,19 @@ class DungeonGame:
         if type(players) == int:
             if players < 2:
                 raise ValueError("The game must have at least 2 players!")
-            self.players = [Player(NAMES[idx], mode="random", model_path=self.model_path, agent=agent) for idx in range(players)]
+            self.players = [Player(NAMES[idx], mode="random", model_path=self.model_path,
+                                   agent=agent if (frozen_agent is None or idx < 2) else frozen_agent)
+                            for idx in range(players)]
         if type(players) == list:
             if len(players) < 2:
                 raise ValueError("The game must have at least 2 players!")
             self.players = [Player(player["name"],
                                    model_path=self.model_path,
-                                   agent=agent,
+                                   agent=agent if (frozen_agent is None or idx < 2) else frozen_agent,
                                    mode=player["mode"],
                                    action_selection_mode=player.get("action_selection_mode",
                                                                     "random_dist")
-                                   ) for player in players]
+                                   ) for idx, player in enumerate(players)]
 
         random.shuffle(self.players)
         self.monster_deck = Deck([Card(*monster) for monster in INITIAL_MONSTER_DECK])

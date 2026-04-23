@@ -106,6 +106,7 @@ class Agent:
 
             # if action is invalid, choose again
             while valid_actions[action.numpy()[0][0]] == 0:
+                print("Invalid action selected, choosing again...")
                 print("Action probs", valid_action_probs)
                 action = tf.random.categorical(tf.math.log(valid_action_probs), 1)
             return action.numpy()[0][0]

@@ -88,7 +88,7 @@ def run_test(agent, n):
     """N games with 1 greedy agent vs 3 random. Returns (greedy_results, random_results)."""
     greedy_results, random_results = [], []
     players_cfg = [
-        {"name": "GreedyAgent", "mode": "greedy"},
+        {"name": "GreedyAgent", "mode": "greedy", "action_selection_mode": "max_probability"},
         {"name": "Random1", "mode": "random"},
         {"name": "Random2", "mode": "random"},
         {"name": "Random3", "mode": "random"},
