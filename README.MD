@@ -1,6 +1,6 @@
 # Dungeon of Mandom — A2C Agent
 
-An implementation of the board game **Dungeon of Mandom** with an **Advantage Actor-Critic (A2C)** reinforcement learning agent trained to play optimally.
+An implementation of the board game **[Dungeon of Mandom](https://boardgamegeek.com/boardgame/150312/welcome-to-the-dungeon)** with an **Advantage Actor-Critic (A2C)** reinforcement learning agent trained to play optimally.
 
 ## Setup (Windows)
 
