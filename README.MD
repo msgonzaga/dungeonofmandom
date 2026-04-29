@@ -23,7 +23,13 @@ By default this starts a 4-player game: 2 human players, 1 greedy AI (trained mo
 
 ### Configure players
 
-Edit the `players` list in `main.py`. Each player is a dict with a `name` and one of three `mode` values:
+Pass player modes as positional arguments to control who plays:
+
+```bash
+python main.py human greedy          # 2 players: you vs the AI
+python main.py greedy greedy greedy  # 3-player AI benchmark
+python main.py random random         # fully automated smoke test
+```
 
 | Mode | Behaviour |
 |---|---|
@@ -31,7 +37,7 @@ Edit the `players` list in `main.py`. Each player is a dict with a `name` and on
 | `random` | Picks a random valid action each turn |
 | `greedy` | Uses the trained A2C model to select actions |
 
-For fully automated games (e.g. quick smoke tests), set all players to `random` or `greedy` and set `auto_run=True`.
+When no arguments are given, the default 4-player configuration is used (2 human, 1 greedy, 1 random). For fully automated games set all players to `random` or `greedy`.
 
 ### Train the agent
 
